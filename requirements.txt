@@ -1,8 +1,45 @@
+# =============================================================================
+# DEPENDENCIES UNTUK SISTEM ASESMEN TERPADU BNN PROVINSI KALIMANTAN UTARA
+# =============================================================================
+
+# Streamlit - Framework utama aplikasi web
 streamlit==1.28.0
+
+# Data processing dan manipulation
 pandas==2.1.0
+numpy==1.24.0
+
+# Visualisasi data
 plotly==5.17.0
+
+# Generate dokumen PDF
 reportlab==4.0.4
+
+# Generate dokumen Word
 python-docx==1.1.0
+
+# Utility untuk date dan time
 python-dateutil==2.8.2
+
+# Untuk konversi data
 pybase64==1.3.0
+
+# Untuk kompatibilitas Windows (opsional, jika diperlukan)
+pywin32==306
+
+# Untuk streamlit extensions
+streamlit-extras==0.4.1
+
+# Untuk styling tambahan
 Pillow==10.0.1
+
+# Untuk format data tambahan
+openpyxl==3.1.2
+
+# =============================================================================
+# Development dependencies (untuk development environment)
+# =============================================================================
+# black==23.11.0
+# flake8==6.1.0
+# pytest==7.4.3
+# pylint==3.0.2
