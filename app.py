@@ -43,11 +43,11 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
         font-weight: bold;
         color: #1f77b4;
         text-align: center;
-        padding: 1.5rem;
+        padding: 1rem;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -111,6 +111,33 @@ DSM5_CRITERIA = [
 POLA_PENGGUNAAN = ["Coba-Coba", "Rekreasional", "Situasional", "Habitual", "Kompulsif"]
 TINGKAT_KEPARAHAN = ["Ringan", "Sedang", "Berat"]
 
+# ===================== SEMA MA (16 KATEGORI) & NON_SEMA =======================
+# Unit yang dipakai: "gram", "butir", "lembar"
+SEMA_LIMITS = {
+    "Ganja": {"limit": 5.0, "unit": "gram"},
+    "Ganja Cair": {"limit": 1.0, "unit": "gram"},
+    "Hashish": {"limit": 1.0, "unit": "gram"},
+    "Sabu/Metamfetamin": {"limit": 1.0, "unit": "gram"},
+    "Amfetamin": {"limit": 1.0, "unit": "gram"},
+    "Heroin": {"limit": 1.0, "unit": "gram"},
+    "Morfin": {"limit": 1.0, "unit": "gram"},
+    "Kodein": {"limit": 0.072, "unit": "gram"},  # 72 mg
+    "Kokain": {"limit": 1.0, "unit": "gram"},
+    "Ekstasi/MDMA": {"limit": 8.0, "unit": "butir"},
+    "MDMA Serbuk": {"limit": 1.0, "unit": "gram"},
+    "LSD": {"limit": 2.0, "unit": "lembar"},
+    "Shabu Cair": {"limit": 1.0, "unit": "gram"},
+    # beberapa kategori tambahan bisa ditambahkan di sini
+}
+
+# Zat yang diakui oleh Juknis / daftar G tapi TIDAK termasuk ambang numerik SEMA:
+NON_SEMA_LIST = [
+    "Carisoprodol",
+    "Tramadol",
+    "Trihexyphenidyl",
+    # tambahkan jika ada obat daftar-G lain
+]
+
 # =============================================================================
 # FUNGSI GENERATE NOMOR SURAT
 # =============================================================================
@@ -166,12 +193,80 @@ def analyze_medical_data(data):
     }
 
 # =============================================================================
+# FUNGSI EVALUASI SEMA
+# =============================================================================
+def evaluate_barang_bukti_sema(barang_bukti_detail):
+    """
+    Evaluasi tiap barang bukti terhadap ambang SEMA.
+    barang_bukti_detail: dict keyed by jenis (string) -> {"jumlah": float, "satuan": str}
+    Mengembalikan dict ringkasan.
+    """
+    sema_exceeded = []
+    sema_within = []
+    unit_issues = []
+    non_sema_items = []
+
+    if not barang_bukti_detail:
+        return {
+            "sema_exceeded": [],
+            "sema_within": [],
+            "unit_issues": [],
+            "non_sema_items": []
+        }
+
+    for jenis, det in barang_bukti_detail.items():
+        if det is None:
+            continue
+        jumlah = det.get("jumlah", 0)
+        satuan = (det.get("satuan") or "").lower().strip()
+
+        # Normalize jenis key if necessary (assume same nama digunakan)
+        key = jenis
+
+        # Non SEMA -> daftar obat daftar G dll
+        if key in NON_SEMA_LIST:
+            non_sema_items.append(f"{key}: jumlah={jumlah} {satuan} (NON-SEMA - dinilai kualitatif sesuai Juknis)")
+            continue
+
+        sema_info = SEMA_LIMITS.get(key)
+        if not sema_info:
+            unit_issues.append(f"{key}: tidak terdapat di SEMA (perlu penilaian ahli/juknis)")
+            continue
+
+        expected_unit = (sema_info.get("unit") or "").lower()
+        limit = sema_info.get("limit")
+
+        if limit is None:
+            unit_issues.append(f"{key}: tidak ada ambang numerik (diperlukan penilaian ahli)")
+            continue
+
+        # Unit harus match; jika tidak, laporkan untuk verifikasi manual
+        if expected_unit == satuan:
+            try:
+                if float(jumlah) > float(limit):
+                    sema_exceeded.append(f"{key}: {jumlah} {satuan} > ambang SEMA {limit} {expected_unit}")
+                else:
+                    sema_within.append(f"{key}: {jumlah} {satuan} ≤ ambang SEMA {limit} {expected_unit}")
+            except Exception:
+                unit_issues.append(f"{key}: error membaca jumlah ({jumlah})")
+        else:
+            # mismatch unit -> perlu verifikasi
+            unit_issues.append(f"{key}: satuan input '{satuan}' tidak sesuai dengan yang diharapkan '{expected_unit}' - verifikasi manual diperlukan")
+
+    return {
+        "sema_exceeded": sema_exceeded,
+        "sema_within": sema_within,
+        "unit_issues": unit_issues,
+        "non_sema_items": non_sema_items
+    }
+
+# =============================================================================
 # FUNGSI ANALISIS HUKUM
 # =============================================================================
 def analyze_legal_data(data):
-    """Analisis data hukum berdasarkan KEP/99"""
+    """Analisis data hukum berdasarkan KEP/99 + evaluasi SEMA bila diaktifkan"""
     
-    # Cek keterlibatan jaringan
+    # Cek keterlibatan jaringan awal berdasarkan tujuan & metode pembelian
     tujuan_kepemilikan = data.get('tujuan_kepemilikan', '')
     metode_pembelian = data.get('metode_pembelian', '')
     
@@ -184,13 +279,32 @@ def analyze_legal_data(data):
     # Cek riwayat pidana
     riwayat_pidana = data.get('riwayat_pidana_narkotika', False)
     riwayat_penahanan = data.get('riwayat_penahanan', 0)
-    
+
+    # Evaluasi SEMA jika barang bukti ada dan flag diaktifkan (flag optional)
+    barang_bukti_detail = data.get('barang_bukti_detail', {}) or {}
+    enable_sema_evaluation = data.get('enable_sema_evaluation', True)
+
+    sema_result = {}
+    if enable_sema_evaluation and barang_bukti_detail:
+        sema_result = evaluate_barang_bukti_sema(barang_bukti_detail)
+        # Jika ada yang melebihi ambang SEMA, pastikan keterlibatan_jaringan menjadi Didapatkan
+        if sema_result.get('sema_exceeded'):
+            keterlibatan_jaringan = "Didapatkan (Berdasarkan jumlah BB melebihi SEMA)"
+    else:
+        sema_result = {
+            "sema_exceeded": [],
+            "sema_within": [],
+            "unit_issues": [],
+            "non_sema_items": []
+        }
+
     return {
         'keterlibatan_jaringan': keterlibatan_jaringan,
         'riwayat_pidana': riwayat_pidana,
         'riwayat_penahanan': riwayat_penahanan,
         'barang_bukti': data.get('barang_bukti_jenis', []),
-        'tujuan_kepemilikan': tujuan_kepemilikan
+        'tujuan_kepemilikan': tujuan_kepemilikan,
+        'sema_result': sema_result
     }
 
 # =============================================================================
@@ -203,7 +317,7 @@ def generate_recommendation(medical_analysis, legal_analysis, demografi):
     keterlibatan = legal_analysis['keterlibatan_jaringan']
     dsm5 = medical_analysis['dsm5_count']
     
-    # Rule-based recommendation
+    # Rule-based recommendation (tetap mempertahankan logika awal)
     if keterlibatan == "Tidak didapatkan" and dsm5 >= 2:
         if severity == "Berat" or dsm5 >= 6:
             rekomendasi = "Rehabilitasi Rawat Inap"
@@ -217,7 +331,7 @@ def generate_recommendation(medical_analysis, legal_analysis, demografi):
         tindak_lanjut = "dilanjutkan sesuai ketentuan Perundang-Undangan"
         wajib_lapor = f"melaksanakan WAJIB LAPOR kepada Penyidik {demografi.get('instansi_penyidik', 'Polda/Polres')} sampai selesai proses rehabilitasi"
         
-    elif keterlibatan == "Didapatkan" and dsm5 >= 2:
+    elif keterlibatan.startswith("Didapatkan") and dsm5 >= 2:
         rekomendasi = "Proses Hukum dengan Rehabilitasi"
         durasi = "sesuai putusan hakim"
         tempat = "Lembaga Pemasyarakatan dengan fasilitas rehabilitasi"
@@ -518,6 +632,19 @@ def generate_pdf_document(data, medical_analysis, legal_analysis, recommendation
         style_body
     ))
     
+    # Jika ada hasil SEMA, tampilkan ringkasan singkat
+    sema_res = legal_analysis.get('sema_result', {})
+    if sema_res:
+        elements.append(Spacer(1, 0.2*cm))
+        if sema_res.get('sema_exceeded'):
+            elements.append(Paragraph("<b>Catatan Evaluasi SEMA:</b>", style_body))
+            for msg in sema_res['sema_exceeded']:
+                elements.append(Paragraph(f"- {msg}", style_body))
+        if sema_res.get('non_sema_items'):
+            elements.append(Paragraph("<b>Zat Non-SEMA (dinilai kualitatif):</b>", style_body))
+            for msg in sema_res['non_sema_items']:
+                elements.append(Paragraph(f"- {msg}", style_body))
+    
     elements.append(Spacer(1, 0.3*cm))
     
     # Rekomendasi
@@ -564,8 +691,8 @@ def generate_pdf_document(data, medical_analysis, legal_analysis, recommendation
         f"{data['instansi_pemohon']}."
     ]
     
-    for idx, t in enumerate(tembusan, 1):
-        elements.append(Paragraph(f"{idx}. {t}", style_body))
+    for idx, titem in enumerate(tembusan, 1):
+        elements.append(Paragraph(f"{idx}. {titem}", style_body))
     
     # Build PDF
     doc.build(elements)
@@ -769,14 +896,15 @@ def main():
         for jenis in barang_bukti_jenis:
             col_bb1, col_bb2 = st.columns(2)
             with col_bb1:
-                jumlah = st.number_input(f"Jumlah {jenis} (gram)", 
+                jumlah = st.number_input(f"Jumlah {jenis} (masukkan angka, gunakan satuan di kolom kanan)", 
                                         min_value=0.0, value=0.0, step=0.1,
                                         key=f"bb_{jenis}")
             with col_bb2:
                 satuan = st.selectbox(f"Satuan {jenis}", 
-                                     ["gram", "butir", "paket", "lainnya"],
+                                     ["gram", "butir", "paket", "lembar", "lainnya"],
                                      key=f"satuan_{jenis}")
             
+            # Simpan unit 'paket' atau 'lainnya' juga — evaluator akan minta verifikasi jika unit tidak sesuai
             barang_bukti_detail[jenis] = {"jumlah": jumlah, "satuan": satuan}
         
         st.markdown("**2. Tujuan Kepemilikan Narkotika**")
@@ -854,6 +982,30 @@ def main():
             placeholder="Kesimpulan keterlibatan dalam jaringan peredaran gelap narkotika...",
             height=100
         )
+        
+        # --- Opsi evaluasi SEMA otomatis (opsional) ---
+        enable_sema = st.checkbox("Aktifkan evaluasi SEMA Mahkamah Agung (16 kategori) untuk barang bukti", value=True, help="Jika diaktifkan, sistem akan memeriksa apakah jumlah BB melebihi ambang SEMA dan memberi peringatan.")
+        if enable_sema and barang_bukti_detail:
+            sema_preview = evaluate_barang_bukti_sema(barang_bukti_detail)
+            if sema_preview['sema_exceeded']:
+                st.error("⚠️ Deteksi: Barang bukti yang MELEBIHI ambang SEMA:")
+                for msg in sema_preview['sema_exceeded']:
+                    st.markdown(f"- {msg}")
+            if sema_preview['sema_within']:
+                st.success("✅ Barang bukti dalam batas SEMA untuk jenis berikut:")
+                for msg in sema_preview['sema_within']:
+                    st.markdown(f"- {msg}")
+            if sema_preview['non_sema_items']:
+                st.warning("ℹ Barang bukti non-SEMA (dinilai kualitatif oleh tim):")
+                for msg in sema_preview['non_sema_items']:
+                    st.markdown(f"- {msg}")
+            if sema_preview['unit_issues']:
+                st.warning("⚠ Perlu verifikasi manual untuk item berikut (unit/ambang tidak cocok):")
+                for msg in sema_preview['unit_issues']:
+                    st.markdown(f"- {msg}")
+        else:
+            if not barang_bukti_detail:
+                st.caption("Pilih jenis barang bukti di atas untuk melihat evaluasi SEMA.")
     
     # =============================================================================
     # TAB 2: ASESMEN MEDIS
@@ -1156,7 +1308,7 @@ def main():
             
             nomor_surat_pemohon = st.text_input(
                 "Nomor Surat Pemohon *",
-                placeholder="B/XXX/..."
+                placeholder="B/XXX/... "
             )
             
             tanggal_surat_pemohon = st.date_input(
@@ -1188,7 +1340,7 @@ def main():
         st.markdown("---")
     
     # Tombol Generate
-    if st.button("🔍 PROSES ASESMEN & GENERATE SURAT", type="primary", use_container_width=True):
+    if st.button("🔍 PROSES ASESMEN & GENERATE SURAT", use_container_width=True):
         
         # Validasi input wajib
         errors = []
@@ -1253,6 +1405,8 @@ def main():
                     'metode_pembelian': metode_pembelian,
                     'fakta_hukum': fakta_hukum,
                     'kesimpulan_hukum': kesimpulan_hukum,
+                    # flag evaluasi SEMA
+                    'enable_sema_evaluation': enable_sema,
                     
                     # Medis
                     'dsm5_count': dsm5_count,
@@ -1399,6 +1553,22 @@ def main():
         
         st.markdown("---")
         
+        # tampilkan detail SEMA jika ada
+        sema_info = hasil['legal'].get('sema_result', {})
+        if sema_info:
+            if sema_info.get('sema_exceeded'):
+                st.error("⚠️ Hasil Evaluasi SEMA: Melebihi ambang pada:")
+                for m in sema_info['sema_exceeded']:
+                    st.markdown(f"- {m}")
+            if sema_info.get('non_sema_items'):
+                st.warning("ℹ Zat non-SEMA terdeteksi (mis. Carisoprodol) — dinilai kualitatif:")
+                for m in sema_info['non_sema_items']:
+                    st.markdown(f"- {m}")
+            if sema_info.get('unit_issues'):
+                st.info("🔎 Item membutuhkan verifikasi unit/konversi:")
+                for m in sema_info['unit_issues']:
+                    st.markdown(f"- {m}")
+        
         # Preview Surat
         with st.expander("👁️ Preview Isi Surat", expanded=False):
             st.markdown(f"""
@@ -1451,7 +1621,6 @@ def main():
     
     # =============================================================================
     # TAB 4: PANDUAN
-    # (DIPINDAHKAN KE SINI AGAR TAB4 TERDEFINISI DALAM SCOPE main())
     # =============================================================================
     with tab4:
         st.header("📚 IV. PANDUAN PENGGUNAAN SISTEM")
@@ -1598,6 +1767,7 @@ def main():
         BNN Provinsi Kalimantan Utara  
         Jl. Teuku Umar No. 31, Kota Tarakan, Provinsi Kalimantan Utara  
         """)
-
+    
+# End main()
 if __name__ == "__main__":
     main()
