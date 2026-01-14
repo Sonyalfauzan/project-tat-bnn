@@ -1423,7 +1423,7 @@ def main():
             narkotika golongan I yaitu **{', '.join(hasil['data']['jenis_narkotika_positif'])}** 
             untuk diri sendiri dengan pola pemakaian **{hasil['medical']['pola_penggunaan']}** 
             kategori **{hasil['medical']['severity_level']}**, didiagnosis 
-            **{hasil['medical']['diagnosis']}** ({hasil['medical']['diagnosis_code']}).
+            **{hasil['medical']['diagnosis']}** ({hasil['medical']['diagnosis_code']}). 
             
             b. Bahwa tersangka/terdakwa a.n. **{hasil['data']['nama']}** 
             **{hasil['legal']['keterlibatan_jaringan']}** indikasi keterlibatan dalam 
@@ -1448,152 +1448,156 @@ def main():
             **{hasil['data']['nama_penandatangan']}**  
             NIP. {hasil['data']['nip_penandatangan']}
             """)
+    
+    # =============================================================================
+    # TAB 4: PANDUAN
+    # (DIPINDAHKAN KE SINI AGAR TAB4 TERDEFINISI DALAM SCOPE main())
+    # =============================================================================
+    with tab4:
+        st.header("📚 IV. PANDUAN PENGGUNAAN SISTEM")
+        
+        st.markdown("""
+        ### 📖 Tentang Sistem
+        
+        Sistem Asesmen Terpadu (TAT) BNN Provinsi Kalimantan Utara ini dirancang untuk 
+        membantu Tim Asesmen Terpadu dalam melakukan asesmen terhadap tersangka/terdakwa 
+        penyalahguna narkotika sesuai dengan:
+        
+        - **UU No. 35 Tahun 2009** tentang Narkotika
+        - **KEP/99 I/X/KA/PB/06.00/2025/BNN** tentang Petunjuk Teknis Pelaksanaan Asesmen Terpadu
+        - Instrumen Asesmen: ASI, ASAM, DSM-5, ICD-10, PPDGJ III
+        """)
+        
+        st.markdown("---")
+        
+        with st.expander("🔍 CARA PENGGUNAAN", expanded=True):
+            st.markdown("""
+            **Langkah 1: Input Data Demografi & Hukum (Tab I)**
+            1. Isi data identitas tersangka/terdakwa secara lengkap
+            2. Uraikan kronologi kejadian dengan detail
+            3. Input data penggunaan narkotika dan hasil tes urine
+            4. Isi riwayat hukum (pidana, penahanan, persidangan)
+            5. Lengkapi data keterlibatan jaringan dan fakta hukum
+            
+            **Langkah 2: Asesmen Medis (Tab II)**
+            1. Centang kriteria DSM-5 yang terpenuhi
+            2. Pilih diagnosis ICD-10 yang sesuai
+            3. Isi pola penggunaan narkotika
+            4. Lengkapi ASAM 6 dimensi (simplified)
+            5. Tulis kesimpulan asesmen medis
+            
+            **Langkah 3: Generate Surat (Tab III)**
+            1. Lengkapi informasi surat (nomor, tanggal, penerima)
+            2. Klik tombol "PROSES ASESMEN & GENERATE SURAT"
+            3. Review ringkasan hasil
+            4. Download surat dalam format Word dan/atau PDF
+            """)
+        
+        with st.expander("📋 KRITERIA DSM-5", expanded=False):
+            st.markdown("""
+            **11 Kriteria Gangguan Penggunaan Zat (DSM-5):**
+            
+            **Interpretasi:**
+            - **0-1 kriteria**: Tidak ada gangguan
+            - **2-3 kriteria**: Gangguan Penggunaan **RINGAN** (Mild)
+            - **4-5 kriteria**: Gangguan Penggunaan **SEDANG** (Moderate)  
+            - **6-11 kriteria**: Gangguan Penggunaan **BERAT** (Severe)
+            """)
+            
+            for i, crit in enumerate(DSM5_CRITERIA, 1):
+                st.markdown(f"{i}. {crit}")
+        
+        with st.expander("🏥 DIAGNOSIS ICD-10", expanded=False):
+            st.markdown("**Kode Diagnosis Gangguan Mental dan Perilaku akibat Penggunaan Zat:**")
+            
+            for code, diagnosis in DIAGNOSIS_ICD10.items():
+                st.markdown(f"- **{code}**: {diagnosis}")
+        
+        with st.expander("📊 ASAM 6 DIMENSI", expanded=False):
+            st.markdown("""
+            **American Society of Addiction Medicine (ASAM) Criteria:**
+            
+            1. **Dimensi 1**: Intoksikasi Akut dan/atau Potensi Withdrawal
+               - Menilai tingkat keparahan sakau dan risiko komplikasi medis
+            
+            2. **Dimensi 2**: Kondisi dan Komplikasi Biomedis
+               - Penyakit fisik yang menyertai (HIV, Hepatitis, TBC, dll)
+            
+            3. **Dimensi 3**: Kondisi Emosional, Behavioral, Kognitif
+               - Gangguan mental komorbid (depresi, anxietas, psikotik, dll)
+            
+            4. **Dimensi 4**: Kesiapan untuk Berubah
+               - Motivasi dan insight terhadap masalah ketergantungan
+            
+            5. **Dimensi 5**: Potensi Relapse, Continued Use, Continued Problem
+               - Riwayat relapse, trigger, pola kambuh
+            
+            6. **Dimensi 6**: Lingkungan Pemulihan/Recovery Environment
+               - Dukungan keluarga, kondisi rumah, pekerjaan, ekonomi
+            """)
+        
+        with st.expander("⚖️ DASAR HUKUM", expanded=False):
+            st.markdown("""
+            **Regulasi yang Menjadi Acuan:**
+            
+            1. **Undang-Undang Nomor 35 Tahun 2009** tentang Narkotika
+               - Pasal 54: Pecandu dan korban wajib menjalani rehabilitasi
+               - Pasal 103: Hakim dapat menetapkan rehabilitasi
+               - Pasal 127: Penyalahguna dapat direhabilitasi
+            
+            2. **Peraturan Bersama 7 Instansi Nomor 1 Tahun 2014**
+               - Penanganan Pecandu dan Korban Penyalahgunaan Narkotika
+               - Mekanisme Asesmen Terpadu
+            
+            3. **Keputusan BNN Nomor KEP/99 I/X/KA/PB/06.00/2025/BNN**
+               - Petunjuk Teknis Pelaksanaan Asesmen Terpadu
+               - Format dan prosedur asesmen
+            """)
+        
+        with st.expander("❓ FAQ (Pertanyaan Umum)", expanded=False):
+            st.markdown("""
+            **Q: Apakah sistem ini menggantikan Tim Asesmen Terpadu?**  
+            A: Tidak. Sistem ini adalah **alat bantu** untuk mempermudah proses asesmen. 
+            Keputusan final tetap berada di tangan Tim Asesmen Terpadu yang terdiri dari 
+            profesional (dokter, psikolog, pekerja sosial, penegak hukum).
+            
+            **Q: Bagaimana jika data tidak lengkap?**  
+            A: Sistem akan memberikan peringatan untuk data wajib yang belum diisi. 
+            Isi data selengkap mungkin untuk hasil asesmen yang akurat.
+            
+            **Q: Apakah bisa mengubah surat setelah di-generate?**  
+            A: Surat yang di-download dalam format Word (.docx) dapat diedit secara manual 
+            jika diperlukan penyesuaian.
+            
+            **Q: Bagaimana cara menyimpan data asesmen?**  
+            A: Saat ini sistem belum memiliki fitur penyimpanan database. Simpan surat hasil 
+            (Word/PDF) sebagai dokumentasi. Pengembangan fitur database akan dilakukan di 
+            versi mendatang.
+            
+            **Q: Apakah rekomendasi sistem pasti tepat?**  
+            A: Rekomendasi sistem berdasarkan algoritma rule-based sesuai regulasi. Namun, 
+            Tim Asesmen Terpadu tetap harus mempertimbangkan faktor kontekstual lain yang 
+            tidak tercakup dalam sistem.
+            """)
+        
+        st.markdown("---")
+        
+        st.markdown("""
+        <div class="warning-box">
+        <strong>⚠️ DISCLAIMER:</strong><br/>
+        Sistem ini adalah alat bantu untuk proses asesmen. Keputusan final tetap berada 
+        di tangan Tim Asesmen Terpadu BNN dan aparat penegak hukum yang berwenang sesuai 
+        dengan peraturan perundang-undangan yang berlaku.
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        st.info("""
+        **📞 Kontak:**  
+        BNN Provinsi Kalimantan Utara  
+        Jl. Teuku Umar No. 31, Kota Tarakan, Provinsi Kalimantan Utara  
+        """)
 
-# =============================================================================
-# TAB 4: PANDUAN
-# =============================================================================
-with tab4:
-    st.header("📚 IV. PANDUAN PENGGUNAAN SISTEM")
-    
-    st.markdown("""
-    ### 📖 Tentang Sistem
-    
-    Sistem Asesmen Terpadu (TAT) BNN Provinsi Kalimantan Utara ini dirancang untuk 
-    membantu Tim Asesmen Terpadu dalam melakukan asesmen terhadap tersangka/terdakwa 
-    penyalahguna narkotika sesuai dengan:
-    
-    - **UU No. 35 Tahun 2009** tentang Narkotika
-    - **KEP/99 I/X/KA/PB/06.00/2025/BNN** tentang Petunjuk Teknis Pelaksanaan Asesmen Terpadu
-    - Instrumen Asesmen: ASI, ASAM, DSM-5, ICD-10, PPDGJ III
-    """)
-    
-    st.markdown("---")
-    
-    with st.expander("🔍 CARA PENGGUNAAN", expanded=True):
-        st.markdown("""
-        **Langkah 1: Input Data Demografi & Hukum (Tab I)**
-        1. Isi data identitas tersangka/terdakwa secara lengkap
-        2. Uraikan kronologi kejadian dengan detail
-        3. Input data penggunaan narkotika dan hasil tes urine
-        4. Isi riwayat hukum (pidana, penahanan, persidangan)
-        5. Lengkapi data keterlibatan jaringan dan fakta hukum
-        
-        **Langkah 2: Asesmen Medis (Tab II)**
-        1. Centang kriteria DSM-5 yang terpenuhi
-        2. Pilih diagnosis ICD-10 yang sesuai
-        3. Isi pola penggunaan narkotika
-        4. Lengkapi ASAM 6 dimensi (simplified)
-        5. Tulis kesimpulan asesmen medis
-        
-        **Langkah 3: Generate Surat (Tab III)**
-        1. Lengkapi informasi surat (nomor, tanggal, penerima)
-        2. Klik tombol "PROSES ASESMEN & GENERATE SURAT"
-        3. Review ringkasan hasil
-        4. Download surat dalam format Word dan/atau PDF
-        """)
-    
-    with st.expander("📋 KRITERIA DSM-5", expanded=False):
-        st.markdown("""
-        **11 Kriteria Gangguan Penggunaan Zat (DSM-5):**
-        
-        **Interpretasi:**
-        - **0-1 kriteria**: Tidak ada gangguan
-        - **2-3 kriteria**: Gangguan Penggunaan **RINGAN** (Mild)
-        - **4-5 kriteria**: Gangguan Penggunaan **SEDANG** (Moderate)  
-        - **6-11 kriteria**: Gangguan Penggunaan **BERAT** (Severe)
-        """)
-        
-        for i, crit in enumerate(DSM5_CRITERIA, 1):
-            st.markdown(f"{i}. {crit}")
-    
-    with st.expander("🏥 DIAGNOSIS ICD-10", expanded=False):
-        st.markdown("**Kode Diagnosis Gangguan Mental dan Perilaku akibat Penggunaan Zat:**")
-        
-        for code, diagnosis in DIAGNOSIS_ICD10.items():
-            st.markdown(f"- **{code}**: {diagnosis}")
-    
-    with st.expander("📊 ASAM 6 DIMENSI", expanded=False):
-        st.markdown("""
-        **American Society of Addiction Medicine (ASAM) Criteria:**
-        
-        1. **Dimensi 1**: Intoksikasi Akut dan/atau Potensi Withdrawal
-           - Menilai tingkat keparahan sakau dan risiko komplikasi medis
-        
-        2. **Dimensi 2**: Kondisi dan Komplikasi Biomedis
-           - Penyakit fisik yang menyertai (HIV, Hepatitis, TBC, dll)
-        
-        3. **Dimensi 3**: Kondisi Emosional, Behavioral, Kognitif
-           - Gangguan mental komorbid (depresi, anxietas, psikotik, dll)
-        
-        4. **Dimensi 4**: Kesiapan untuk Berubah
-           - Motivasi dan insight terhadap masalah ketergantungan
-        
-        5. **Dimensi 5**: Potensi Relapse, Continued Use, Continued Problem
-           - Riwayat relapse, trigger, pola kambuh
-        
-        6. **Dimensi 6**: Lingkungan Pemulihan/Recovery Environment
-           - Dukungan keluarga, kondisi rumah, pekerjaan, ekonomi
-        """)
-    
-    with st.expander("⚖️ DASAR HUKUM", expanded=False):
-        st.markdown("""
-        **Regulasi yang Menjadi Acuan:**
-        
-        1. **Undang-Undang Nomor 35 Tahun 2009** tentang Narkotika
-           - Pasal 54: Pecandu dan korban wajib menjalani rehabilitasi
-           - Pasal 103: Hakim dapat menetapkan rehabilitasi
-           - Pasal 127: Penyalahguna dapat direhabilitasi
-        
-        2. **Peraturan Bersama 7 Instansi Nomor 1 Tahun 2014**
-           - Penanganan Pecandu dan Korban Penyalahgunaan Narkotika
-           - Mekanisme Asesmen Terpadu
-        
-        3. **Keputusan BNN Nomor KEP/99 I/X/KA/PB/06.00/2025/BNN**
-           - Petunjuk Teknis Pelaksanaan Asesmen Terpadu
-           - Format dan prosedur asesmen
-        """)
-    
-    with st.expander("❓ FAQ (Pertanyaan Umum)", expanded=False):
-        st.markdown("""
-        **Q: Apakah sistem ini menggantikan Tim Asesmen Terpadu?**  
-        A: Tidak. Sistem ini adalah **alat bantu** untuk mempermudah proses asesmen. 
-        Keputusan final tetap berada di tangan Tim Asesmen Terpadu yang terdiri dari 
-        profesional (dokter, psikolog, pekerja sosial, penegak hukum).
-        
-        **Q: Bagaimana jika data tidak lengkap?**  
-        A: Sistem akan memberikan peringatan untuk data wajib yang belum diisi. 
-        Isi data selengkap mungkin untuk hasil asesmen yang akurat.
-        
-        **Q: Apakah bisa mengubah surat setelah di-generate?**  
-        A: Surat yang di-download dalam format Word (.docx) dapat diedit secara manual 
-        jika diperlukan penyesuaian.
-        
-        **Q: Bagaimana cara menyimpan data asesmen?**  
-        A: Saat ini sistem belum memiliki fitur penyimpanan database. Simpan surat hasil 
-        (Word/PDF) sebagai dokumentasi. Pengembangan fitur database akan dilakukan di 
-        versi mendatang.
-        
-        **Q: Apakah rekomendasi sistem pasti tepat?**  
-        A: Rekomendasi sistem berdasarkan algoritma rule-based sesuai regulasi. Namun, 
-        Tim Asesmen Terpadu tetap harus mempertimbangkan faktor kontekstual lain yang 
-        tidak tercakup dalam sistem.
-        """)
-    
-    st.markdown("---")
-    
-    st.markdown("""
-    <div class="warning-box">
-    <strong>⚠️ DISCLAIMER:</strong><br/>
-    Sistem ini adalah alat bantu untuk proses asesmen. Keputusan final tetap berada 
-    di tangan Tim Asesmen Terpadu BNN dan aparat penegak hukum yang berwenang sesuai 
-    dengan peraturan perundang-undangan yang berlaku.
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    st.info("""
-    **📞 Kontak:**  
-    BNN Provinsi Kalimantan Utara  
-    Jl. Teuku Umar No. 31, Kota Tarakan, Provinsi Kalimantan Utara  
-    """)
+if __name__ == "__main__":
+    main()
