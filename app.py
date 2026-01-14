@@ -7,8 +7,6 @@ Berdasarkan:
 - KEP/99 I/X/KA/PB/06.00/2025/BNN tentang Petunjuk Teknis Pelaksanaan 
   Asesmen Terpadu
 - Instrumen: ASI, ASAM, DSM-5, ICD-10, PPDGJ III
-
-Output: Surat Hasil TAT (Word & PDF) sesuai format resmi BNN
 =================================================================================
 """
 
