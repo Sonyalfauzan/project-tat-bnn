@@ -1,0 +1,23 @@
+# Core Framework
+streamlit==1.40.1
+
+# Data Processing
+pandas==2.2.3
+numpy==2.2.0
+
+# Visualization
+plotly==5.24.1
+
+# PDF Generation
+reportlab==4.2.5
+
+# Word Document Generation
+python-docx==1.1.2
+
+# Additional utilities
+python-dateutil==2.9.0
+Pillow==11.0.0
+
+# Optional (untuk production)
+# watchdog==6.0.0  # untuk auto-reload
+# streamlit-analytics==0.4.1  # untuk analytics
