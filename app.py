@@ -383,7 +383,7 @@ def generate_word_document(data, medical_analysis, legal_analysis, recommendatio
     run3 = header_text.add_run("Jl. Teuku Umar No. 31, Kota Tarakan, Provinsi Kalimantan Utara\n")
     run3.font.size = Pt(10)
     
-    run4 = header_text.add_run("Telepon: (0551) 21XXX | Email: bnnkaltara@bnn.go.id")
+    run4 = header_text.add_run("Telepon: (+62) 81256023695 | Web: kaltara.bnn.go.id")
     run4.font.size = Pt(9)
     
     # Garis pemisah
@@ -554,7 +554,7 @@ def generate_pdf_document(data, medical_analysis, legal_analysis, recommendation
     elements.append(Paragraph("<b>BADAN NARKOTIKA NASIONAL<br/>PROVINSI KALIMANTAN UTARA</b>", style_header))
     elements.append(Paragraph("(NATIONAL NARCOTICS BOARD PROVINCE OF NORTH KALIMANTAN)", style_center))
     elements.append(Paragraph("Jl. Teuku Umar No. 31, Kota Tarakan, Provinsi Kalimantan Utara", style_center))
-    elements.append(Paragraph("Telepon: (0551) 21XXX | Email: bnnkaltara@bnn.go.id", style_center))
+    elements.append(Paragraph("Telepon: (+62) 81256023695 | Web: kaltara.bnn.go.id", style_center))
     elements.append(Spacer(1, 0.3*cm))
     elements.append(Paragraph("_" * 100, style_center))
     elements.append(Spacer(1, 0.5*cm))
@@ -725,8 +725,8 @@ def main():
         Kota Tarakan
         Provinsi Kalimantan Utara
         
-        📞 (0551) 21XXX
-        📧 bnnkaltara@bnn.go.id
+        📞 (+62) 81256023695 
+        📧 kaltara.bnn.go.id
         """)
         
         st.markdown("---")
