@@ -4,7 +4,7 @@ SISTEM ASESMEN TERPADU (TAT) BNN PROVINSI KALIMANTAN UTARA
 =================================================================================
 Berdasarkan:
 - UU No. 35 Tahun 2009 tentang Narkotika
-- KEP/99 I/X/KA/PB/06.00/2025/BNN tentang Petunjuk Teknis Pelaksanaan 
+- KEP/991/X/KA/PB/06.00/2025/BNN tentang Petunjuk Teknis Pelaksanaan 
   Asesmen Terpadu
 - Instrumen: ASI, ASAM, DSM-5, ICD-10, PPDGJ III
 =================================================================================
